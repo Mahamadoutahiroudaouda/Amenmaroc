@@ -13,7 +13,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 def test_simple():
     """Test simple sans les imports complexes."""
-    print("🧪 TEST SIMPLE DU SYSTÈME")
+    print("[TEST] TEST SIMPLE DU SYSTEME")
     
     # Configuration basique
     N_ROBOTS = 50
@@ -34,7 +34,7 @@ def test_simple():
     }
     
     # Test 1: Points aléatoires
-    print("🎯 Test 1: Points aléatoires")
+    print("[TEST] Test 1: Points aleatoires")
     for i in range(100):  # 100 frames
         x = np.random.uniform(-1.4, 1.4, N_ROBOTS)
         y = np.random.uniform(-0.85, 0.85, N_ROBOTS)
@@ -49,7 +49,7 @@ def test_simple():
         
         plt.pause(0.01)
     
-    print("✅ Test réussi !")
+    print("[OK] Test reussi !")
     plt.show()
 
 if __name__ == "__main__":

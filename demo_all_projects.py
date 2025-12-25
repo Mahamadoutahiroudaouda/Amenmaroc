@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FFMpegWriter
 
-# Ajouter le chemin src au Python path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+# Ajouter le dossier src au path Python
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 from projects.project_01_anem_lumiere import Project01AnemLumiere
 from projects.project_02_monuments import Project02Monuments
@@ -22,29 +22,25 @@ from projects.project_07_faune import Project07FauneNiger
 from projects.project_08_calligraphie import Project08Calligraphie
 from projects.project_09_parade import Project09GrandeParade
 from projects.project_10_architecture import Project10PatrimoineArchitectural
+from projects.project_11_naissance_nation import Project11NaissanceNation
 
 from utils.config import config
 
 def setup_visualization():
-    """Configure la visualisation matplotlib."""
-    fig, ax = plt.subplots(figsize=(12, 8))
+    """Configure la visualisation matplotlib 3D pour le show cinéma."""
+    fig = plt.figure(figsize=(15, 10))
+    ax = fig.add_subplot(111, projection='3d')
     
-    # Configuration de l'arène
+    # Configuration de l'arène 3D
     ax.set_xlim(-config.ARENA_WIDTH/2, config.ARENA_WIDTH/2)
     ax.set_ylim(-config.ARENA_HEIGHT/2, config.ARENA_HEIGHT/2)
-    ax.set_aspect('equal')
-    ax.set_facecolor('black')
-    ax.grid(False)
-    ax.set_xticks([])
-    ax.set_yticks([])
+    ax.set_zlim(0, config.ARENA_DEPTH)
     
-    # Cadre décoratif
-    arena_border = plt.Rectangle(
-        (-config.ARENA_WIDTH/2, -config.ARENA_HEIGHT/2),
-        config.ARENA_WIDTH, config.ARENA_HEIGHT,
-        fill=False, edgecolor='white', linewidth=2, alpha=0.5
-    )
-    ax.add_patch(arena_border)
+    ax.set_facecolor('#000000')  # Ciel nocturne
+    fig.patch.set_facecolor('#000000')
+    
+    # Masquer les axes pour l'effet cinéma
+    ax.set_axis_off()
     
     return fig, ax
 
@@ -77,27 +73,25 @@ def run_project_01_full():
                 start_time = time_val
             
             ax.clear()
+            ax.set_axis_off()
             
-            # Configuration de base
+            # Reconstruction des limites 3D (ax.clear supprime tout)
             ax.set_xlim(-config.ARENA_WIDTH/2, config.ARENA_WIDTH/2)
             ax.set_ylim(-config.ARENA_HEIGHT/2, config.ARENA_HEIGHT/2)
-            ax.set_facecolor('black')
-            ax.set_xticks([])
-            ax.set_yticks([])
+            ax.set_zlim(0, config.ARENA_DEPTH)
+            ax.set_facecolor('#000000')
             
-            # Cadre décoratif
-            arena_border = plt.Rectangle(
-                (-config.ARENA_WIDTH/2, -config.ARENA_HEIGHT/2),
-                config.ARENA_WIDTH, config.ARENA_HEIGHT,
-                fill=False, edgecolor='white', linewidth=2, alpha=0.3
-            )
-            ax.add_patch(arena_border)
+            # ==== EFFETS CAMÉRA CINÉMATOGRAPHIQUE ====
+            # Exemple: Rotation lente orbitale
+            azim_val = (time_val * 5) % 360  # 5 degrés par seconde
+            elev_val = 20 + 5 * np.sin(time_val * 0.2) # Oscillation douce
+            ax.view_init(elev=elev_val, azim=azim_val)
             
-            # Titre principal
+            # Titre principal (3D)
             ax.set_title(
-                f"ANEM 2025 - Robotarium Swarm\n"
-                f"PROJET #1: ANEM EN LUMIÈRE",
-                color='white', fontsize=16, pad=20, weight='bold'
+                f"ANEM 2025 - CIELS DU NIGER 3D\n"
+                f"Tableau: {phase_name.upper()}",
+                color='white', fontsize=16, pad=-20, weight='bold'
             )
             
             # GÉNÉRER LES COULEURS POUR CHAQUE ROBOT
@@ -106,11 +100,26 @@ def run_project_01_full():
                 color = project.colors.get_phase_color(positions, phase_name, time_val, i)
                 colors_list.append(color)
             
-            # Afficher les robots AVEC LES BONNES COULEURS
-            ax.scatter(positions[0], positions[1], 
-                      c=colors_list,  # Utiliser la liste des couleurs individuelles
-                      s=100, alpha=0.9, 
-                      edgecolors='white', linewidth=1.5,
+            # Simuler la profondeur (Z) si non fournie par le projet (compatibilité 2D)
+            z_pos = np.zeros(positions.shape[1])
+            if positions.shape[0] > 2:
+                z_pos = positions[2]
+            else:
+                # Illusion 3D: on ajoute un petit décalage selon le temps ou la position
+                z_pos = 0.2 * np.sin(positions[0] * 2 + time_val)
+            
+            # ==== DRONE LIGHT SHOW EFFECT 3D ====
+            # Layer: Glow & Glow 
+            ax.scatter(positions[0], positions[1], z_pos,
+                      c=colors_list,
+                      s=150, alpha=0.2, 
+                      marker='o')
+            
+            # Layer: Bright core
+            ax.scatter(positions[0], positions[1], z_pos,
+                      c=colors_list,
+                      s=40, alpha=1.0, 
+                      edgecolors='white', linewidth=0.5,
                       marker='o')
             
             # Informations en temps réel
@@ -130,12 +139,12 @@ def run_project_01_full():
             
             # Légende des couleurs pour le drapeau
             if "drapeau" in phase_name.lower() or "pluie" in phase_name.lower():
-                legend_text = "🟠 Orange ⚪ Blanc 🟢 Vert"
+                legend_text = "🟠 Orange ⚪ Blanc 🟢 Vert - Drone Light Show"
                 ax.text(
                     0.5, 0.02, legend_text,
-                    transform=ax.transAxes, color='white', fontsize=12,
+                    transform=ax.transAxes, color='cyan', fontsize=11,
                     verticalalignment='bottom', horizontalalignment='center',
-                    bbox=dict(boxstyle="round,pad=0.3", facecolor='black', alpha=0.7)
+                    bbox=dict(boxstyle="round,pad=0.5", facecolor='#0a0a0a', alpha=0.7, edgecolor='#333333')
                 )
             
             # Barre de progression
@@ -156,7 +165,10 @@ def run_project_01_full():
             
             # Mettre à jour l'affichage
             plt.draw()
-            plt.pause(1/config.FPS)
+            try:
+                plt.pause(1/config.FPS)
+            except:
+                pass  # Ignore Tkinter canvas errors
             
             # Capturer pour la vidéo
             if video_writer:
@@ -968,11 +980,11 @@ def main():
         print("7. 🦒 Projet #7: Faune du Niger")
         print("8. 📜 Projet #8: Calligraphie Arabe Animée")
         print("9. 🎪 Projet #9: La Grande Parade")
-        print("10. 🏛️  Projet #10: Patrimoine Architectural")  # NOUVEAU
-        print("11. ⚡ Projet #1: Version rapide")
-        print("12. 🎨 Test spécifique des couleurs drapeau")
-        print("13. 🧪 Tester les formations seulement")
-        print("14. 🚪 Quitter")  # Décalé à 14
+        print("11. 🎬 Projet #11: NAISSANCE D'UNE NATION (PROJETÉ)")
+        print("12. ⚡ Projet #1: Version rapide")
+        print("13. 🎨 Test spécifique des couleurs drapeau")
+        print("14. 🧪 Tester les formations seulement")
+        print("15. 🚪 Quitter")
         
         choix = input("\n🎮 Choisissez une option (1-14): ").strip()
         
@@ -995,14 +1007,16 @@ def main():
         elif choix == "9":
             run_project_09_full()
         elif choix == "10":
-            run_project_10_full()  # NOUVEAU
+            run_project_10_full()
         elif choix == "11":
-            run_project_01_fast()
+            run_project_11_full()
         elif choix == "12":
-            run_project_01_colors_test()
+            run_project_01_fast()
         elif choix == "13":
-            test_formations_only()
+            run_project_01_colors_test()
         elif choix == "14":
+            test_formations_only()
+        elif choix == "15":
             print("👋 Au revoir ! À bientôt sur Robotarium ANEM 2025!")
             break
         else:
